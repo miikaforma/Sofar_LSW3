@@ -125,6 +125,7 @@ for res in socket.getaddrinfo(inverter_ip, inverter_port, socket.AF_INET, socket
   except socket.error as msg:
     print("Could not open socket - inverter/logger turned off");
     invstatus=0;
+    sys.exit(1);
 
 if invstatus==1:
   if verbose=="1": print("connected successfully !");
