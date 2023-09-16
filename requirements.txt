@@ -1,0 +1,3 @@
+libscrc
+paho-mqtt
+influxdb
