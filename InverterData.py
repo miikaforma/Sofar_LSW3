@@ -87,6 +87,7 @@ DomoticzSupport=configParser.get('Domoticz', 'domoticz_support')
 domoticz_mqtt_topic=configParser.get('Domoticz', 'domoticz_mqtt_topic')
 HomeAssistantSupport=configParser.get('HomeAssistant', 'homeassistant_support')
 ha_mqtt_topic=configParser.get('HomeAssistant', 'ha_mqtt_topic')
+isdebug=configParser.get('SofarInverter', 'debug')
 # END CONFIG
 
 timestamp=str(datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'))
@@ -115,7 +116,7 @@ HomeAssistantData=[]
 invstatus=1
 
 # OPEN CONNECTION TO LOGGER
-if verbose=="1": print("Connecting to logger... ", end='');
+if verbose=="1" or isdebug=="1": print("Connecting to logger... ", end='');
 for res in socket.getaddrinfo(inverter_ip, inverter_port, socket.AF_INET, socket.SOCK_STREAM):
   family, socktype, proto, canonname, sockadress = res
   try:
@@ -128,7 +129,7 @@ for res in socket.getaddrinfo(inverter_ip, inverter_port, socket.AF_INET, socket
     sys.exit(1);
 
 if invstatus==1:
-  if verbose=="1": print("connected successfully !");
+  if verbose=="1" or isdebug=="1": print("connected successfully !");
   while chunks<2:
     # Data frame begin
     start = binascii.unhexlify('A5') #start
@@ -157,12 +158,22 @@ if invstatus==1:
     if verbose=="1":
       print("*** Chunk no: ", chunks);
       print("Sent data: ", frame);
+    if isdebug == "1":
+      print("Sending data with clientSocket.sendall")
+
     clientSocket.sendall(frame_bytes);
+
+    if isdebug == "1":
+      print("Sent data successfully with clientSocket.sendall")
 
     ok=False;
     while (not ok):
       try:
+        if isdebug == "1":
+          print("Receiving data with clientSocket.recv(1024)")
         data = clientSocket.recv(1024);
+        if isdebug == "1":
+          print("Received data with clientSocket.recv(1024)")
         ok=True
         try:
           data
@@ -178,6 +189,8 @@ if invstatus==1:
       if verbose=="1": print("Received data: ", data);
       i=pfin-pini
       a=0
+      if isdebug == "1":
+        print("Entering while a<=i")
       while a<=i:
         p1=56+(a*4)
         p2=60+(a*4)
@@ -242,6 +255,8 @@ if invstatus==1:
                   if DomoticzSupport=="1" and DomoticzIdx>0: PrepareDomoticzData(DomoticzData, DomoticzIdx, response);
                   if HomeAssistantSupport=="1": HomeAssistantData.append([title, ratio, unit, metric_type, metric_name, label_name, label_value, response, totaltime]);
         a+=1
+      if isdebug == "1":
+        print("Exited while a<=i")
       if chunks==0:
         pini=reg_start2
         pfin=reg_end2
